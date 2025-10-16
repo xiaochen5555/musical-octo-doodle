@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>典籍填字 - 中国书籍知识填字游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- 配置Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .cell {
+                @apply w-12 h-12 md:w-14 md:h-14 border border-gray-300 flex items-center justify-center font-bold text-xl transition-all;
+            }
+            .cell-filled {
+                @apply bg-primary/10 border-primary;
+            }
+            .cell-correct {
+                @apply bg-secondary/20 border-secondary;
+            }
+            .cell-error {
+                @apply bg-red-100 border-red-300;
+            }
+            .btn-primary {
+                @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 hover:bg-gray-50 text-dark font-medium py-2 px-4 rounded-lg transition-all;
+            }
+            .page {
+                @apply fixed inset-0 bg-light transition-opacity duration-300 flex flex-col items-center justify-center p-4;
+            }
+            .hidden-page {
+                @apply opacity-0 pointer-events-none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-dark overflow-hidden">
+    <!-- 登录页面 -->
+    <div id="loginPage" class="page">
+        <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
+            <div class="text-center mb-6">
+                <i class="fa fa-book text-primary text-4xl mb-3"></i>
+                <h1 class="text-2xl font-bold">典籍填字</h1>
+                <p class="text-gray-500">中国书籍知识填字游戏</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                <input type="text" id="username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="请输入用户名">
+            </div>
+            
+            <button id="loginBtn" class="btn-primary w-full mb-4">
+                <i class="fa fa-sign-in mr-1"></i> 开始游戏
+            </button>
+            
+            <p class="text-center text-sm text-gray-500">
+                登录后可记录您的游戏成绩和统计数据
+            </p>
+        </div>
+    </div>
+
+    <!-- 主页面 -->
+    <div id="mainPage" class="page hidden-page">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold mb-1">典籍填字</h1>
+                <p class="text-gray-500">欢迎回来，<span id="welcomeUsername" class="font-medium"></span></p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总游戏次数</p>
+                    <p class="text-2xl font-bold" id="totalGames">0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总正确率</p>
+                    <p class="text-2xl font-bold text-secondary" id="totalAccuracy">0%</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">最佳排名</p>
+                    <p class="text-2xl font-bold text-accent" id="bestRank">--</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总游戏时间</p>
+                    <p class="text-2xl font-bold" id="totalTime">0</p>
+                </div>
+            </div>
+            
+            <button id="startGameBtn" class="btn-primary w-full mb-3">
+                <i class="fa fa-play mr-1"></i> 开始新游戏
+            </button>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button id="statsBtn" class="btn-secondary flex items-center justify-center">
+                    <i class="fa fa-bar-chart mr-1"></i> 我的统计
+                </button>
+                <button id="rankingBtn" class="btn-secondary flex items-center justify-center">
+                    <i class="fa fa-trophy mr-1"></i> 排行榜
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏页面 -->
+    <div id="gamePage" class="page hidden-page">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">填字游戏</h2>
+                <div class="flex items-center">
+                    <span class="mr-2 text-sm">用时: </span>
+                    <span id="gameTimer" class="font-medium">00:00</span>
+                </div>
+            </div>
+            
+            <!-- 填字网格 -->
+            <div class="flex justify-center mb-6" id="crosswordGrid">
+                <!-- 动态生成网格 -->
+            </div>
+            
+            <!-- 线索区域 -->
+            <div class="mb-6">
+                <h3 class="font-bold mb-2">线索</h3>
+                <div id="cluesList" class="space-y-2">
+                    <!-- 动态生成线索 -->
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="backToMainBtn" class="btn-secondary">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回
+                </button>
+                <button id="submitBtn" class="btn-primary">
+                    <i class="fa fa-check mr-1"></i> 提交答案
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果页面 -->
+    <div id="resultPage" class="page hidden-page">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-md w-full">
+            <div class="text-center mb-6">
+                <i class="fa fa-trophy text-accent text-4xl mb-3"></i>
+                <h2 class="text-2xl font-bold">游戏结束</h2>
+            </div>
+            
+            <div class="space-y-4 mb-6">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">游戏用时</span>
+                    <span id="resultTime" class="font-bold">00:00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">正确数量</span>
+                    <span id="resultCorrect" class="font-bold text-secondary">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">错误数量</span>
+                    <span id="resultIncorrect" class="font-bold text-red-500">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">本局排名</span>
+                    <span id="resultRank" class="font-bold text-accent">--</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button id="playAgainBtn" class="btn-primary">
+                    <i class="fa fa-refresh mr-1"></i> 再玩一次
+                </button>
+                <button id="backToMainFromResultBtn" class="btn-secondary">
+                    <i class="fa fa-home mr-1"></i> 首页
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计页面 -->
+    <div id="statsPage" class="page hidden-page">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">我的统计</h2>
+                <button id="backFromStatsBtn" class="text-gray-500 hover:text-dark">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总游戏次数</p>
+                    <p class="text-2xl font-bold" id="statsTotalGames">0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总正确数</p>
+                    <p class="text-2xl font-bold text-secondary" id="statsTotalCorrect">0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总错误数</p>
+                    <p class="text-2xl font-bold text-red-500" id="statsTotalIncorrect">0</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500">总用时</p>
+                    <p class="text-2xl font-bold" id="statsTotalTime">0</p>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="font-bold mb-4">正确率统计</h3>
+                <div class="h-64">
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="font-bold mb-4">最近5局成绩</h3>
+                <div id="recentGames" class="space-y-3">
+                    <!-- 动态生成最近游戏记录 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜页面 -->
+    <div id="rankingPage" class="page hidden-page">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">排行榜</h2>
+                <button id="backFromRankingBtn" class="text-gray-500 hover:text-dark">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="flex border-b mb-4">
+                <button id="rankByTimeBtn" class="px-4 py-2 font-medium text-primary border-b-2 border-primary">
+                    按时间排序
+                </button>
+                <button id="rankByAccuracyBtn" class="px-4 py-2 font-medium text-gray-500 hover:text-dark">
+                    按正确率排序
+                </button>
+            </div>
+            
+            <div id="rankingList" class="space-y-3">
+                <!-- 动态生成排行榜 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据
+        const gameData = {
+            user: null,
+            statistics: {
+                totalGames: 0,
+                totalCorrect: 0,
+                totalIncorrect: 0,
+                totalTime: 0,
+                bestRank: null,
+                recentGames: []
+            },
+            currentGame: {
+                puzzle: null,
+                answers: {},
+                startTime: 0,
+                timer: null
+            },
+            allPlayers: [] // 存储所有玩家数据用于排行榜
+        };
+
+        // 题库 - 中国书籍知识
+        const questionBank = [
+            // 第一组题目
+            {
+                id: 1,
+                title: "论语名句",
+                size: 5,
+                grid: [
+                    [1, 0, 2, 0, 0],
+                    [1, 0, 2, 0, 3],
+                    [1, 0, 0, 0, 3],
+                    [0, 0, 0, 0, 3],
+                    [0, 0, 0, 0, 0]
+                ],
+                clues: {
+                    1: { direction: "vertical", length: 3, text: "《论语》中'______，必有我师焉'", answer: "三人行" },
+                    2: { direction: "vertical", length: 2, text: "《论语》中'温故而知______'", answer: "新" },
+                    3: { direction: "horizontal", length: 3, text: "《论语》中'学而不思则______'", answer: "罔" }
+                }
+            },
+            // 第二组题目
+            {
+                id: 2,
+                title: "唐诗宋词",
+                size: 5,
+                grid: [
+                    [0, 1, 0, 0, 0],
+                    [2, 1, 0, 0, 0],
+                    [2, 1, 3, 0, 0],
+                    [0, 0, 3, 0, 0],
+                    [0, 0, 3, 0, 0]
+                ],
+                clues: {
+                    1: { direction: "vertical", length: 3, text: "李白诗句'床前明月光，疑是地______霜'", answer: "上" },
+                    2: { direction: "vertical", length: 2, text: "孟浩然诗句'春______不觉晓'", answer: "眠" },
+                    3: { direction: "vertical", length: 3, text: "王安石诗句'春风又______江南岸'", answer: "绿" }
+                }
+            },
+            // 第三组题目
+            {
+                id: 3,
+                title: "古代典籍",
+                size: 5,
+                grid: [
+                    [1, 0, 0, 0, 0],
+                    [1, 2, 0, 0, 0],
+                    [1, 2, 3, 0, 0],
+                    [0, 2, 0, 0, 0],
+                    [0, 0, 0, 0, 0]
+                ],
+                clues: {
+                    1: { direction: "vertical", length: 3, text: "中国第一部纪传体通史《______》", answer: "史记" },
+                    2: { direction: "horizontal", length: 3, text: "儒家经典《______》", answer: "论语" },
+                    3: { direction: "horizontal", length: 1, text: "道家经典《______经》", answer: "道德" }
+                }
+            },
+            // 第四组题目
+            {
+                id: 4,
+                title: "四大名著",
+                size: 5,
+                grid: [
+                    [0, 1, 0, 0, 0],
+                    [0, 1, 2, 0, 0],
+                    [0, 1, 2, 3, 0],
+                    [0, 0, 2, 0, 0],
+                    [0, 0, 0, 0, 0]
+                ],
+                clues: {
+                    1: { direction: "vertical", length: 3, text: "《______》是中国第一部长篇章回体小说", answer: "三国" },
+                    2: { direction: "horizontal", length: 3, text: "《______》描写了孙悟空等保护唐僧西天取经的故事", answer: "西游" },
+                    3: { direction: "horizontal", length: 1, text: "《______》描写了梁山好汉的故事", answer: "水浒" }
+                }
+            }
+        ];
+
+        // DOM元素
+        const pages = {
+            login: document.getElementById('loginPage'),
+            main: document.getElementById('mainPage'),
+            game: document.getElementById('gamePage'),
+            result: document.getElementById('resultPage'),
+            stats: document.getElementById('statsPage'),
+            ranking: document.getElementById('rankingPage')
+        };
+
+        // 工具函数：切换页面
+        function showPage(pageId) {
+            Object.keys(pages).forEach(key => {
+                if (key === pageId) {
+                    pages[key].classList.remove('hidden-page');
+                } else {
+                    pages[key].classList.add('hidden-page');
+                }
+            });
+        }
+
+        // 工具函数：格式化时间（秒 -> 分:秒）
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 工具函数：格式化长时间（秒 -> 时:分:秒）
+        function formatLongTime(seconds) {
+            if (seconds < 60) {
+                return `${seconds}秒`;
+            } else if (seconds < 3600) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}分${secs}秒`;
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                return `${hours}时${mins}分`;
+            }
+        }
+
+        // 初始化：从本地存储加载数据
+        function init() {
+            // 加载用户数据
+            const savedUser = localStorage.getItem('bookCrosswordUser');
+            const savedStats = localStorage.getItem('bookCrosswordStats');
+            const savedPlayers = localStorage.getItem('bookCrosswordPlayers');
+            
+            if (savedUser) {
+                gameData.user = JSON.parse(savedUser);
+            }
+            
+            if (savedStats) {
+                gameData.statistics = JSON.parse(savedStats);
+            }
+            
+            if (savedPlayers) {
+                gameData.allPlayers = JSON.parse(savedPlayers);
+            } else {
+                // 初始化一些示例玩家数据
+                gameData.allPlayers = [
+                    { name: "玩家一", bestTime: 120, totalAccuracy: 90 },
+                    { name: "玩家二", bestTime: 150, totalAccuracy: 85 },
+                    { name: "玩家三", bestTime: 180, totalAccuracy: 80 }
+                ];
+                savePlayersData();
+            }
+            
+            // 如果已有用户，直接进入主页面
+            if (gameData.user) {
+                updateMainPage();
+                showPage('main');
+            }
+            
+            // 绑定事件监听器
+            bindEvents();
+        }
+
+        // 保存数据到本地存储
+        function saveUserData() {
+            localStorage.setItem('bookCrosswordUser', JSON.stringify(gameData.user));
+        }
+
+        function saveStatsData() {
+            localStorage.setItem('bookCrosswordStats', JSON.stringify(gameData.statistics));
+        }
+
+        function savePlayersData() {
+            localStorage.setItem('bookCrosswordPlayers', JSON.stringify(gameData.allPlayers));
+        }
+
+        // 绑定所有事件监听器
+        function bindEvents() {
+            // 登录按钮
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                const username = document.getElementById('username').value.trim();
+                if (username) {
+                    gameData.user = { name: username };
+                    saveUserData();
+                    
+                    // 检查是否是新用户，如果是则初始化玩家数据
+                    const existingPlayer = gameData.allPlayers.find(p => p.name === username);
+                    if (!existingPlayer) {
+                        gameData.allPlayers.push({
+                            name: username,
+                            bestTime: Infinity,
+                            totalAccuracy: 0
+                        });
+                        savePlayersData();
+                    }
+                    
+                    updateMainPage();
+                    showPage('main');
+                } else {
+                    alert('请输入用户名');
+                }
+            });
+            
+            // 开始游戏按钮
+            document.getElementById('startGameBtn').addEventListener('click', startNewGame);
+            
+            // 返回主页面按钮
+            document.getElementById('backToMainBtn').addEventListener('click', () => {
+                if (gameData.currentGame.timer) {
+                    clearInterval(gameData.currentGame.timer);
+                }
+                showPage('main');
+            });
+            
+            // 提交答案按钮
+            document.getElementById('submitBtn').addEventListener('click', submitAnswers);
+            
+            // 再玩一次按钮
+            document.getElementById('playAgainBtn').addEventListener('click', startNewGame);
+            
+            // 从结果页返回主页
+            document.getElementById('backToMainFromResultBtn').addEventListener('click', () => {
+                showPage('main');
+            });
+            
+            // 统计页面按钮
+            document.getElementById('statsBtn').addEventListener('click', () => {
+                updateStatsPage();
+                showPage('stats');
+            });
+            
+            // 从统计页返回
+            document.getElementById('backFromStatsBtn').addEventListener('click', () => {
+                showPage('main');
+            });
+            
+            // 排行榜按钮
+            document.getElementById('rankingBtn').addEventListener('click', () => {
+                updateRankingPage('time');
+                showPage('ranking');
+            });
+            
+            // 从排行榜返回
+            document.getElementById('backFromRankingBtn').addEventListener('click', () => {
+                showPage('main');
+            });
+            
+            // 排行榜排序按钮
+            document.getElementById('rankByTimeBtn').addEventListener('click', () => {
+                document.getElementById('rankByTimeBtn').classList.add('text-primary', 'border-primary');
+                document.getElementById('rankByTimeBtn').classList.remove('text-gray-500');
+                document.getElementById('rankByAccuracyBtn').classList.remove('text-primary', 'border-primary');
+                document.getElementById('rankByAccuracyBtn').classList.add('text-gray-500');
+                updateRankingPage('time');
+            });
+            
+            document.getElementById('rankByAccuracyBtn').addEventListener('click', () => {
+                document.getElementById('rankByAccuracyBtn').classList.add('text-primary', 'border-primary');
+                document.getElementById('rankByAccuracyBtn').classList.remove('text-gray-500');
+                document.getElementById('rankByTimeBtn').classList.remove('text-primary', 'border-primary');
+                document.getElementById('rankByTimeBtn').classList.add('text-gray-500');
+                updateRankingPage('accuracy');
+            });
+        }
+
+        // 更新主页面数据
+        function updateMainPage() {
+            document.getElementById('welcomeUsername').textContent = gameData.user.name;
+            document.getElementById('totalGames').textContent = gameData.statistics.totalGames;
+            
+            const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
+            const accuracy = totalAnswers > 0 ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) : 0;
+            document.getElementById('totalAccuracy').textContent = `${accuracy}%`;
+            
+            document.getElementById('bestRank').textContent = gameData.statistics.bestRank || '--';
+            document.getElementById('totalTime').textContent = formatLongTime(gameData.statistics.totalTime);
+        }
+
+        // 开始新游戏
+        function startNewGame() {
+            // 随机选择一个谜题
+            const randomIndex = Math.floor(Math.random() * questionBank.length);
+            gameData.currentGame.puzzle = questionBank[randomIndex];
+            
+            // 初始化答案存储
+            gameData.currentGame.answers = {};
+            Object.keys(gameData.currentGame.puzzle.clues).forEach(key => {
+                gameData.currentGame.answers[key] = Array(gameData.currentGame.puzzle.clues[key].length).fill('');
+            });
+            
+            // 生成填字网格
+            generateCrosswordGrid();
+            
+            // 生成线索列表
+            generateCluesList();
+            
+            // 开始计时
+            startGameTimer();
+            
+            // 显示游戏页面
+            showPage('game');
+        }
+
+        // 生成填字网格
+        function generateCrosswordGrid() {
+            const gridContainer = document.getElementById('crosswordGrid');
+            gridContainer.innerHTML = '';
+            
+            const table = document.createElement('table');
+            const tbody = document.createElement('tbody');
+            
+            const { size, grid } = gameData.currentGame.puzzle;
+            
+            for (let row = 0; row < size; row++) {
+                const tr = document.createElement('tr');
+                
+                for (let col = 0; col < size; col++) {
+                    const cellValue = grid[row][col];
+                    const td = document.createElement('td');
+                    
+                    if (cellValue === 0) {
+                        // 空白单元格（不可填）
+                        td.className = 'w-12 h-12 md:w-14 md:h-14 bg-gray-200';
+                    } else {
+                        // 可填单元格
+                        td.className = 'cell relative';
+                        td.dataset.row = row;
+                        td.dataset.col = col;
+                        td.dataset.number = cellValue;
+                        
+                        // 如果是起始单元格，添加数字标记
+                        if (gameData.currentGame.puzzle.clues[cellValue]) {
+                            const numberSpan = document.createElement('span');
+                            numberSpan.className = 'absolute top-1 left-1 text-xs text-gray-500';
+                            numberSpan.textContent = cellValue;
+                            td.appendChild(numberSpan);
+                        }
+                        
+                        // 创建输入框
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = 1;
+                        input.className = 'w-8 h-8 text-center focus:outline-none';
+                        input.dataset.row = row;
+                        input.dataset.col = col;
+                        input.dataset.number = cellValue;
+                        td.appendChild(input);
+                        
+                        // 输入事件
+                        input.addEventListener('input', (e) => {
+                            // 只允许中文和字母
+                            e.target.value = e.target.value.replace(/[^a-zA-Z\u4e00-\u9fa5]/g, '');
+                            handleInput(e, row, col);
+                        });
+                        
+                        // 按键事件（处理导航）
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'ArrowRight') {
+                                e.preventDefault();
+                                moveToNextCell(row, col, 'right');
+                            } else if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
+                                moveToNextCell(row, col, 'left');
+                            } else if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                moveToNextCell(row, col, 'down');
+                            } else if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                moveToNextCell(row, col, 'up');
+                            }
+                        });
+                    }
+                    
+                    tr.appendChild(td);
+                }
+                
+                tbody.appendChild(tr);
+            }
+            
+            table.appendChild(tbody);
+            gridContainer.appendChild(table);
+        }
+
+        // 生成线索列表
+        function generateCluesList() {
+            const cluesContainer = document.getElementById('cluesList');
+            cluesContainer.innerHTML = '';
+            
+            // 按数字排序线索
+            const sortedClues = Object.entries(gameData.currentGame.puzzle.clues)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+            
+            sortedClues.forEach(([number, clue]) => {
+                const clueElement = document.createElement('div');
+                clueElement.className = 'flex items-start p-2 border-b border-gray-100';
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.className = 'font-bold text-primary mr-2 min-w-[24px]';
+                numberSpan.textContent = `${number}.`;
+                
+                const directionSpan = document.createElement('span');
+                directionSpan.className = 'text-xs bg-gray-100 px-1 rounded mr-2';
+                directionSpan.textContent = clue.direction === 'horizontal' ? '横' : '竖';
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = clue.text;
+                
+                clueElement.appendChild(numberSpan);
+                clueElement.appendChild(directionSpan);
+                clueElement.appendChild(textSpan);
+                
+                // 点击线索高亮对应单元格
+                clueElement.addEventListener('click', () => {
+                    highlightClueCells(number);
+                });
+                
+                cluesContainer.appendChild(clueElement);
+            });
+        }
+
+        // 高亮线索对应的单元格
+        function highlightClueCells(number) {
+            // 移除所有高亮
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('bg-primary/10');
+            });
+            
+            const clue = gameData.currentGame.puzzle.clues[number];
+            let startRow, startCol;
+            
+            // 找到起始位置
+            outerLoop:
+            for (let row = 0; row < gameData.currentGame.puzzle.size; row++) {
+                for (let col = 0; col < gameData.currentGame.puzzle.size; col++) {
+                    if (gameData.currentGame.puzzle.grid[row][col] == number) {
+                        startRow = row;
+                        startCol = col;
+                        break outerLoop;
+                    }
+                }
+            }
+            
+            // 高亮对应单元格
+            if (clue.direction === 'horizontal') {
+                for (let i = 0; i < clue.length; i++) {
+                    const cell = document.querySelector(`.cell[data-row="${startRow}"][data-col="${startCol + i}"]`);
+                    if (cell) cell.classList.add('bg-primary/10');
+                }
+            } else {
+                for (let i = 0; i < clue.length; i++) {
+                    const cell = document.querySelector(`.cell[data-row="${startRow + i}"][data-col="${startCol}"]`);
+                    if (cell) cell.classList.add('bg-primary/10');
+                }
+            }
+            
+            // 聚焦到第一个单元格
+            const firstInput = document.querySelector(`input[data-row="${startRow}"][data-col="${startCol}"]`);
+            if (firstInput) firstInput.focus();
+        }
+
+        // 处理输入
+        function handleInput(e, row, col) {
+            const value = e.target.value;
+            const number = e.target.dataset.number;
+            
+            // 找到这个单元格在词语中的位置
+            let startRow, startCol;
+            outerLoop:
+            for (let r = 0; r < gameData.currentGame.puzzle.size; r++) {
+                for (let c = 0; c < gameData.currentGame.puzzle.size; c++) {
+                    if (gameData.currentGame.puzzle.grid[r][c] == number) {
+                        startRow = r;
+                        startCol = c;
+                        break outerLoop;
+                    }
+                }
+            }
+            
+            const clue = gameData.currentGame.puzzle.clues[number];
+            let index;
+            
+            if (clue.direction === 'horizontal') {
+                index = col - startCol;
+            } else {
+                index = row - startRow;
+            }
+            
+            // 保存答案
+            if (index >= 0 && index < clue.length) {
+                gameData.currentGame.answers[number][index] = value;
+            }
+            
+            // 自动移动到下一个单元格
+            if (value) {
+                if (clue.direction === 'horizontal') {
+                    moveToNextCell(row, col, 'right');
+                } else {
+                    moveToNextCell(row, col, 'down');
+                }
+            }
+        }
+
+        // 移动到下一个单元格
+        function moveToNextCell(row, col, direction) {
+            let nextRow = row;
+            let nextCol = col;
+            
+            switch (direction) {
+                case 'right':
+                    nextCol++;
+                    break;
+                case 'left':
+                    nextCol--;
+                    break;
+                case 'down':
+                    nextRow++;
+                    break;
+                case 'up':
+                    nextRow--;
+                    break;
+            }
+            
+            // 检查下一个单元格是否存在且可填
+            const nextCell = document.querySelector(`.cell[data-row="${nextRow}"][data-col="${nextCol}"]`);
+            if (nextCell) {
+                const input = nextCell.querySelector('input');
+                if (input) input.focus();
+            }
+        }
+
+        // 开始游戏计时器
+        function startGameTimer() {
+            gameData.currentGame.startTime = new Date().getTime();
+            
+            if (gameData.currentGame.timer) {
+                clearInterval(gameData.currentGame.timer);
+            }
+            
+            const timerElement = document.getElementById('gameTimer');
+            
+            gameData.currentGame.timer = setInterval(() => {
+                const currentTime = new Date().getTime();
+                const elapsedSeconds = Math.floor((currentTime - gameData.currentGame.startTime) / 1000);
+                timerElement.textContent = formatTime(elapsedSeconds);
+            }, 1000);
+        }
+
+        // 提交答案
+        function submitAnswers() {
+            // 停止计时器
+            clearInterval(gameData.currentGame.timer);
+            const endTime = new Date().getTime();
+            const elapsedSeconds = Math.floor((endTime - gameData.currentGame.startTime) / 1000);
+            
+            // 检查答案
+            let correctCount = 0;
+            let totalCount = 0;
+            
+            Object.entries(gameData.currentGame.puzzle.clues).forEach(([number, clue]) => {
+                const userAnswer = gameData.currentGame.answers[number].join('');
+                totalCount += clue.length;
+                
+                // 检查每个字符
+                for (let i = 0; i < clue.length; i++) {
+                    const isCorrect = gameData.currentGame.answers[number][i] === clue.answer[i];
+                    correctCount += isCorrect ? 1 : 0;
+                    
+                    // 标记单元格
+                    markCellAsCorrectOrIncorrect(number, i, isCorrect);
+                }
+            });
+            
+            const incorrectCount = totalCount - correctCount;
+            
+            // 更新统计数据
+            gameData.statistics.totalGames++;
+            gameData.statistics.totalCorrect += correctCount;
+            gameData.statistics.totalIncorrect += incorrectCount;
+            gameData.statistics.totalTime += elapsedSeconds;
+            
+            // 保存最近游戏记录
+            gameData.statistics.recentGames.unshift({
+                time: elapsedSeconds,
+                correct: correctCount,
+                incorrect: incorrectCount,
+                date: new Date().toISOString()
+            });
+            
+            // 只保留最近5条记录
+            if (gameData.statistics.recentGames.length > 5) {
+                gameData.statistics.recentGames = gameData.statistics.recentGames.slice(0, 5);
+            }
+            
+            saveStatsData();
+            
+            // 更新玩家数据
+            const playerIndex = gameData.allPlayers.findIndex(p => p.name === gameData.user.name);
+            if (playerIndex !== -1) {
+                // 更新最佳时间
+                if (elapsedSeconds < gameData.allPlayers[playerIndex].bestTime) {
+                    gameData.allPlayers[playerIndex].bestTime = elapsedSeconds;
+                }
+                
+                // 更新总正确率
+                const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
+                gameData.allPlayers[playerIndex].totalAccuracy = totalAnswers > 0 
+                    ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) 
+                    : 0;
+                
+                savePlayersData();
+            }
+            
+            // 计算排名
+            const rank = calculateRank(elapsedSeconds, correctCount, totalCount);
+            gameData.statistics.bestRank = gameData.statistics.bestRank 
+                ? Math.min(gameData.statistics.bestRank, rank) 
+                : rank;
+            saveStatsData();
+            
+            // 更新结果页面
+            document.getElementById('resultTime').textContent = formatTime(elapsedSeconds);
+            document.getElementById('resultCorrect').textContent = correctCount;
+            document.getElementById('resultIncorrect').textContent = incorrectCount;
+            document.getElementById('resultRank').textContent = rank;
+            
+            // 延迟显示结果页面，让用户看到标记的答案
+            setTimeout(() => {
+                showPage('result');
+            }, 1000);
+        }
+
+        // 标记单元格为正确或错误
+        function markCellAsCorrectOrIncorrect(number, index, isCorrect) {
+            const clue = gameData.currentGame.puzzle.clues[number];
+            let startRow, startCol;
+            
+            // 找到起始位置
+            outerLoop:
+            for (let r = 0; r < gameData.currentGame.puzzle.size; r++) {
+                for (let c = 0; c < gameData.currentGame.puzzle.size; c++) {
+                    if (gameData.currentGame.puzzle.grid[r][c] == number) {
+                        startRow = r;
+                        startCol = c;
+                        break outerLoop;
+                    }
+                }
+            }
+            
+            let cellRow, cellCol;
+            if (clue.direction === 'horizontal') {
+                cellRow = startRow;
+                cellCol = startCol + index;
+            } else {
+                cellRow = startRow + index;
+                cellCol = startCol;
+            }
+            
+            const cell = document.querySelector(`.cell[data-row="${cellRow}"][data-col="${cellCol}"]`);
+            if (cell) {
+                cell.classList.remove('cell-correct', 'cell-error');
+                cell.classList.add(isCorrect ? 'cell-correct' : 'cell-error');
+            }
+        }
+
+        // 计算排名
+        function calculateRank(time, correct, total) {
+            const accuracy = total > 0 ? (correct / total) * 100 : 0;
+            let rank = 1;
+            
+            // 比较所有玩家
+            gameData.allPlayers.forEach(player => {
+                // 先比较正确率，再比较时间
+                if (player.name !== gameData.user.name) {
+                    if (player.totalAccuracy > accuracy) {
+                        rank++;
+                    } else if (player.totalAccuracy === accuracy && player.bestTime < time) {
+                        rank++;
+                    }
+                }
+            });
+            
+            return rank;
+        }
+
+        // 更新统计页面
+        function updateStatsPage() {
+            const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
+            const accuracy = totalAnswers > 0 ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) : 0;
+            
+            document.getElementById('statsTotalGames').textContent = gameData.statistics.totalGames;
+            document.getElementById('statsTotalCorrect').textContent = gameData.statistics.totalCorrect;
+            document.getElementById('statsTotalIncorrect').textContent = gameData.statistics.totalIncorrect;
+            document.getElementById('statsTotalTime').textContent = formatLongTime(gameData.statistics.totalTime);
+            
+            // 绘制正确率图表
+            const ctx = document.getElementById('accuracyChart').getContext('2d');
+            if (window.accuracyChartInstance) {
+                window.accuracyChartInstance.destroy();
+            }
+            
+            window.accuracyChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['正确', '错误'],
+                    datasets: [{
+                        data: [gameData.statistics.totalCorrect, gameData.statistics.totalIncorrect],
+                        backgroundColor: ['#10B981', '#EF4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = totalAnswers > 0 ? Math.round((value / totalAnswers) * 100) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            
+            // 更新最近游戏记录
+            const recentGamesContainer = document.getElementById('recentGames');
+            recentGamesContainer.innerHTML = '';
+            
+            if (gameData.statistics.recentGames.length === 0) {
+                recentGamesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">暂无游戏记录</p>';
+                return;
+            }
+            
+            gameData.statistics.recentGames.forEach(game => {
+                const gameElement = document.createElement('div');
+                gameElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                
+                const date = new Date(game.date);
+                const dateStr = `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                
+                gameElement.innerHTML = `
+                    <div>
+                        <p class="font-medium">${dateStr}</p>
+                        <p class="text-sm text-gray-500">用时: ${formatTime(game.time)}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-secondary font-medium">正确: ${game.correct}</p>
+                        <p class="text-red-500 text-sm">错误: ${game.incorrect}</p>
+                    </div>
+                `;
+                
+                recentGamesContainer.appendChild(gameElement);
+            });
+        }
+
+        // 更新排行榜页面
+        function updateRankingPage(type) {
+            const rankingContainer = document.getElementById('rankingList');
+            rankingContainer.innerHTML = '';
+            
+            // 复制并排序玩家数据
+            let sortedPlayers = [...gameData.allPlayers];
+            
+            if (type === 'time') {
+                // 按最佳时间排序（升序）
+                sortedPlayers.sort((a, b) => a.bestTime - b.bestTime);
+            } else {
+                // 按正确率排序（降序）
+                sortedPlayers.sort((a, b) => b.totalAccuracy - a.totalAccuracy);
+            }
+            
+            // 显示排名
+            sortedPlayers.forEach((player, index) => {
+                const rankElement = document.createElement('div');
+                rankElement.className = `flex items-center p-3 rounded-lg ${player.name === gameData.user.name ? 'bg-primary/10' : 'hover:bg-gray-50'}`;
+                
+                // 排名样式
+                let rankClass = '';
+                if (index === 0) rankClass = 'bg-yellow-100 text-yellow-600';
+                else if (index === 1) rankClass = 'bg-gray-200 text-gray-600';
+                else if (index === 2) rankClass = 'bg-orange-100 text-orange-600';
+                else rankClass = 'bg-gray-100 text-gray-600';
+                
+                // 显示内容
+                let statsContent = '';
+                if (type === 'time') {
+                    statsContent = `
+                        <div class="text-right">
+                            <p class="font-medium">最佳时间: ${player.bestTime !== Infinity ? formatTime(player.bestTime) : '--'}</p>
+                            <p class="text-sm text-gray-500">正确率: ${player.totalAccuracy}%</p>
+                        </div>
+                    `;
+                } else {
+                    statsContent = `
+                        <div class="text-right">
+                            <p class="font-medium">正确率: ${player.totalAccuracy}%</p>
+                            <p class="text-sm text-gray-500">最佳时间: ${player.bestTime !== Infinity ? formatTime(player.bestTime) : '--'}</p>
+                        </div>
+                    `;
+                }
+                
+                rankElement.innerHTML = `
+                    <div class="w-8 h-8 rounded-full ${rankClass} flex items-center justify-center font-bold mr-3">
+                        ${index + 1}
+                    </div>
+                    <div class="flex-grow">
+                        <p class="font-medium ${player.name === gameData.user.name ? 'text-primary' : ''}">${player.name}</p>
+                    </div>
+                    ${statsContent}
+                `;
+                
+                rankingContainer.appendChild(rankElement);
+            });
+        }
+
+        // 初始化游戏
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
