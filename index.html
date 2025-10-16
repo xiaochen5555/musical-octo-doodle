@@ -6,7 +6,7 @@
     <title>典籍填字 - 中国书籍知识填字游戏</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>  
     
     <!-- 配置Tailwind -->
     <script>
@@ -31,7 +31,7 @@
     <style type="text/tailwindcss">
         @layer utilities {
             .content-auto {
-                content-visibility: auto;
+                content-visibility: auto;  
             }
             .cell {
                 @apply w-12 h-12 md:w-14 md:h-14 border border-gray-300 flex items-center justify-center font-bold text-xl transition-all;
@@ -112,7 +112,7 @@
                 </div>
             </div>
             
-            <!-- 新增：继续游戏按钮（如果有未完成的游戏） -->
+            <!-- 继续游戏按钮 -->
             <button id="continueGameBtn" class="btn-primary w-full mb-3 hidden">
                 <i class="fa fa-play mr-1"></i> 继续未完成的游戏
             </button>
@@ -255,6 +255,9 @@
         <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold">排行榜</h2>
+                <button id="refreshRankingBtn" class="text-primary hover:text-primary/80 text-sm flex items-center">
+                    <i class="fa fa-refresh mr-1"></i> 刷新
+                </button>
                 <button id="backFromRankingBtn" class="text-gray-500 hover:text-dark">
                     <i class="fa fa-times"></i>
                 </button>
@@ -291,10 +294,17 @@
                 puzzle: null,
                 answers: {},
                 startTime: 0,
-                elapsedSeconds: 0, // 新增：记录已用时
+                elapsedSeconds: 0,
                 timer: null
             },
             allPlayers: [] // 存储所有玩家数据用于排行榜
+        };
+
+        // 配置：替换成你的GitHub仓库信息
+        const GITHUB_CONFIG = {
+            username: "xiaochen5555",  // 例如：octocat  
+            repo: "musical-octo-doodle",             // 例如：book-crossword-game
+            branch: "main"                  // 你的主分支名，通常是main或master
         };
 
         // 题库 - 中国书籍知识
@@ -308,7 +318,7 @@
                     [1, 0, 2, 0, 0],
                     [1, 0, 2, 0, 3],
                     [1, 0, 0, 0, 3],
-                    [0, 0, 0, 0, 3],
+                    [0, 0, 0, 0, 3],  
                     [0, 0, 0, 0, 0]
                 ],
                 clues: {
@@ -456,12 +466,120 @@
             }
         }
 
+        // 获取所有玩家数据（从GitHub JSON文件）
+        async function fetchAllPlayers() {
+            try {
+                // 尝试从GitHub获取最新的玩家数据
+                const url = `https://${GITHUB_CONFIG.username}.github.io/${GITHUB_CONFIG.repo}/players.json`;
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    gameData.allPlayers = data;
+                    return true;
+                } else if (response.status === 404) {
+                    // 如果文件不存在，初始化一个空数组
+                    gameData.allPlayers = [];
+                    return true;
+                }
+            } catch (error) {
+                console.error("获取玩家数据失败，使用本地缓存:", error);
+            }
+            
+            // 失败时使用本地缓存
+            const localPlayers = localStorage.getItem('bookCrosswordCloudPlayers');
+            if (localPlayers) {
+                gameData.allPlayers = JSON.parse(localPlayers);
+                return true;
+            }
+            
+            // 最终 fallback
+            gameData.allPlayers = [
+                { name: "玩家一", bestTime: 120, totalAccuracy: 90 },
+                { name: "玩家二", bestTime: 150, totalAccuracy: 85 },
+                { name: "玩家三", bestTime: 180, totalAccuracy: 80 }
+            ];
+            return false;
+        }
+
+        // 保存玩家数据到GitHub（通过GitHub API）
+        async function savePlayerToCloud(playerData) {
+            try {
+                // 1. 先获取当前所有玩家数据
+                await fetchAllPlayers();
+                
+                // 2. 更新当前玩家数据
+                const playerIndex = gameData.allPlayers.findIndex(p => p.name === playerData.name);
+                if (playerIndex !== -1) {
+                    // 更新已有玩家
+                    gameData.allPlayers[playerIndex] = {
+                        ...gameData.allPlayers[playerIndex],
+                        ...playerData,
+                        lastUpdate: new Date().toISOString()
+                    };
+                } else {
+                    // 添加新玩家
+                    gameData.allPlayers.push({
+                        ...playerData,
+                        lastUpdate: new Date().toISOString()
+                    });
+                }
+                
+                // 3. 保存到本地缓存（防止提交失败）
+                localStorage.setItem('bookCrosswordCloudPlayers', JSON.stringify(gameData.allPlayers));
+                
+                // 4. 提交到GitHub（需要GitHub个人访问令牌，用户需自行设置）
+                const token = prompt("为了保存成绩到排行榜，请输入你的GitHub个人访问令牌（不会存储）：\n获取教程：https://docs.github.com/zh/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token");
+                if (!token) return false;
+                
+                // 构建提交数据
+                const content = btoa(JSON.stringify(gameData.allPlayers, null, 2));
+                const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/players.json`;
+                
+                // 先检查文件是否存在
+                const checkResponse = await fetch(apiUrl);
+                let sha = null;
+                if (checkResponse.ok) {
+                    const fileData = await checkResponse.json();
+                    sha = fileData.sha; // 已有文件的SHA，用于更新
+                }
+                
+                // 提交更新
+                const response = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update player ${playerData.name} stats`,
+                        content: content,
+                        sha: sha,
+                        branch: GITHUB_CONFIG.branch
+                    })
+                });
+                
+                if (response.ok) {
+                    alert("成绩已成功同步到排行榜！");
+                    return true;
+                } else {
+                    const error = await response.json();
+                    console.error("提交失败:", error);
+                    alert(`同步失败: ${error.message || '请检查令牌权限'}`);
+                    return false;
+                }
+            } catch (error) {
+                console.error("保存玩家数据失败:", error);
+                alert("同步失败，请稍后重试");
+                return false;
+            }
+        }
+
         // 初始化：从本地存储加载数据
-        function init() {
+        async function init() {
             // 加载用户数据
             const savedUser = localStorage.getItem('bookCrosswordUser');
             const savedStats = localStorage.getItem('bookCrosswordStats');
-            const savedPlayers = localStorage.getItem('bookCrosswordPlayers');
             
             if (savedUser) {
                 gameData.user = JSON.parse(savedUser);
@@ -471,17 +589,8 @@
                 gameData.statistics = JSON.parse(savedStats);
             }
             
-            if (savedPlayers) {
-                gameData.allPlayers = JSON.parse(savedPlayers);
-            } else {
-                // 初始化一些示例玩家数据
-                gameData.allPlayers = [
-                    { name: "玩家一", bestTime: 120, totalAccuracy: 90 },
-                    { name: "玩家二", bestTime: 150, totalAccuracy: 85 },
-                    { name: "玩家三", bestTime: 180, totalAccuracy: 80 }
-                ];
-                savePlayersData();
-            }
+            // 从云端加载所有玩家数据
+            await fetchAllPlayers();
             
             // 如果已有用户，直接进入主页面（自动登录）
             if (gameData.user) {
@@ -502,10 +611,6 @@
             localStorage.setItem('bookCrosswordStats', JSON.stringify(gameData.statistics));
         }
 
-        function savePlayersData() {
-            localStorage.setItem('bookCrosswordPlayers', JSON.stringify(gameData.allPlayers));
-        }
-
         // 绑定所有事件监听器
         function bindEvents() {
             // 登录按钮
@@ -515,15 +620,15 @@
                     gameData.user = { name: username };
                     saveUserData();
                     
-                    // 检查是否是新用户，如果是则初始化玩家数据
+                    // 检查是否是新用户
                     const existingPlayer = gameData.allPlayers.find(p => p.name === username);
                     if (!existingPlayer) {
+                        // 先添加到本地列表
                         gameData.allPlayers.push({
                             name: username,
                             bestTime: Infinity,
                             totalAccuracy: 0
                         });
-                        savePlayersData();
                     }
                     
                     updateMainPage();
@@ -536,7 +641,7 @@
             // 开始游戏按钮
             document.getElementById('startGameBtn').addEventListener('click', startNewGame);
             
-            // 继续游戏按钮（新增）
+            // 继续游戏按钮
             document.getElementById('continueGameBtn').addEventListener('click', continueSavedGame);
             
             // 返回主页面按钮
@@ -572,9 +677,16 @@
             });
             
             // 排行榜按钮
-            document.getElementById('rankingBtn').addEventListener('click', () => {
+            document.getElementById('rankingBtn').addEventListener('click', async () => {
+                await fetchAllPlayers(); // 打开时刷新数据
                 updateRankingPage('time');
                 showPage('ranking');
+            });
+            
+            // 刷新排行榜按钮
+            document.getElementById('refreshRankingBtn').addEventListener('click', async () => {
+                await fetchAllPlayers();
+                updateRankingPage(document.getElementById('rankByTimeBtn').classList.contains('text-primary') ? 'time' : 'accuracy');
             });
             
             // 从排行榜返回
@@ -599,7 +711,7 @@
                 updateRankingPage('accuracy');
             });
             
-            // 页面关闭前保存游戏进度（新增）
+            // 页面关闭前保存游戏进度
             window.addEventListener('beforeunload', () => {
                 if (gameData.currentGame.timer && gameData.user) {
                     clearInterval(gameData.currentGame.timer);
@@ -623,7 +735,7 @@
             document.getElementById('bestRank').textContent = gameData.statistics.bestRank || '--';
             document.getElementById('totalTime').textContent = formatLongTime(gameData.statistics.totalTime);
             
-            // 检查是否有未完成的游戏，显示继续按钮（新增）
+            // 检查是否有未完成的游戏，显示继续按钮
             const savedProgress = loadSavedGameProgress();
             const continueBtn = document.getElementById('continueGameBtn');
             if (savedProgress) {
@@ -664,7 +776,7 @@
             showPage('game');
         }
         
-        // 继续保存的游戏（新增）
+        // 继续保存的游戏
         function continueSavedGame() {
             const savedProgress = loadSavedGameProgress();
             if (savedProgress) {
@@ -689,7 +801,7 @@
             }
         }
         
-        // 填充已保存的答案（新增）
+        // 填充已保存的答案
         function fillSavedAnswers() {
             Object.entries(gameData.currentGame.answers).forEach(([number, letters]) => {
                 const clue = gameData.currentGame.puzzle.clues[number];
@@ -978,7 +1090,7 @@
         }
 
         // 提交答案
-        function submitAnswers() {
+        async function submitAnswers() {
             // 停止计时器
             clearInterval(gameData.currentGame.timer);
             const endTime = new Date().getTime();
@@ -1029,22 +1141,19 @@
             
             saveStatsData();
             
-            // 更新玩家数据
-            const playerIndex = gameData.allPlayers.findIndex(p => p.name === gameData.user.name);
-            if (playerIndex !== -1) {
-                // 更新最佳时间
-                if (totalElapsedSeconds < gameData.allPlayers[playerIndex].bestTime) {
-                    gameData.allPlayers[playerIndex].bestTime = totalElapsedSeconds;
-                }
-                
-                // 更新总正确率
-                const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
-                gameData.allPlayers[playerIndex].totalAccuracy = totalAnswers > 0 
-                    ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) 
-                    : 0;
-                
-                savePlayersData();
-            }
+            // 准备同步到云端的玩家数据
+            const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
+            const playerData = {
+                name: gameData.user.name,
+                bestTime: Math.min(gameData.allPlayers.find(p => p.name === gameData.user.name)?.bestTime || Infinity, totalElapsedSeconds),
+                totalAccuracy: totalAnswers > 0 ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) : 0
+            };
+            
+            // 同步到云端（排行榜）
+            await savePlayerToCloud(playerData);
+            
+            // 重新获取最新的玩家数据
+            await fetchAllPlayers();
             
             // 计算排名
             const rank = calculateRank(totalElapsedSeconds, correctCount, totalCount);
@@ -1140,7 +1249,7 @@
                     labels: ['正确', '错误'],
                     datasets: [{
                         data: [gameData.statistics.totalCorrect, gameData.statistics.totalIncorrect],
-                        backgroundColor: ['#10B981', '#EF4444'],
+                        backgroundColor: ['#10B981', '#EF4444'],  
                         borderWidth: 0
                     }]
                 },
@@ -1184,7 +1293,7 @@
                 
                 gameElement.innerHTML = `
                     <div>
-                        <p class="font-medium">${dateStr}</p>
+                        <p class="font-medium">${dateStr}</p>  
                         <p class="text-sm text-gray-500">用时: ${formatTime(game.time)}</p>
                     </div>
                     <div class="text-right">
@@ -1223,16 +1332,16 @@
                 if (index === 0) rankClass = 'bg-yellow-100 text-yellow-600';
                 else if (index === 1) rankClass = 'bg-gray-200 text-gray-600';
                 else if (index === 2) rankClass = 'bg-orange-100 text-orange-600';
-                else rankClass = 'bg-gray-100 text-gray-600';
+                else rankClass = 'bg-gray-100 text-gray-600';      
                 
                 // 显示内容
                 let statsContent = '';
                 if (type === 'time') {
                     statsContent = `
                         <div class="text-right">
-                            <p class="font-medium">最佳时间: ${player.bestTime !== Infinity ? formatTime(player.bestTime) : '--'}</p>
-                            <p class="text-sm text-gray-500">正确率: ${player.totalAccuracy}%</p>
-                        </div>
+                            <p class="font-medium">最佳时间: ${player.bestTime !== Infinity ? formatTime(player.bestTime) : '--'}</p>  
+                            <p class="text-sm text-gray-500">正确率: ${player.totalAccuracy}%</p>    
+                        </div>  
                     `;
                 } else {
                     statsContent = `
