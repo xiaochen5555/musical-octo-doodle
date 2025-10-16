@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>典籍填字 - 中国书籍知识填字游戏</title>
-    <!-- 确保外部资源正确加载 -->
+    <!-- 外部资源 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     
-    <!-- 强制Tailwind重新编译样式 -->
     <script>
         tailwind.config = {
             theme: {
@@ -153,7 +152,7 @@
             <div class="mb-6">
                 <h3 class="font-bold mb-2">线索</h3>
                 <div id="cluesList" class="space-y-2">
-                    <!-- 动态生成线索 -->
+                    <!-- 动态生成线索-->
                 </div>
             </div>
             
@@ -308,1029 +307,103 @@
             branch: "main"                  // 你的主分支名，通常是main或master
         };
 
-        // 题库 - 中国书籍知识
+        // 题库 - 20个多样化的题目，贴近图片形式
         const questionBank = [
-            // 第一组题目
+            // 题目1：读书名言
             {
                 id: 1,
-                title: "论语名句",
-                size: 5,
+                title: "读书名言",
+                size: 9,
                 grid: [
-                    [1, 0, 2, 0, 0],
-                    [1, 0, 2, 0, 3],
-                    [1, 0, 0, 0, 3],
-                    [0, 0, 0, 0, 3],
-                    [0, 0, 0, 0, 0]
+                    [1, 1, 1, 1, 1, 0, 2, 2, 2],
+                    [0, 0, 0, 0, 0, 0, 2, 0, 0],
+                    [3, 0, 0, 0, 0, 0, 2, 0, 0],
+                    [3, 0, 0, 0, 0, 0, 2, 0, 0],
+                    [3, 0, 4, 4, 4, 4, 2, 0, 0],
+                    [3, 0, 0, 0, 0, 0, 2, 0, 0],
+                    [3, 0, 0, 0, 0, 0, 2, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 2, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 2, 2, 2]
                 ],
                 clues: {
-                    1: { direction: "vertical", length: 3, text: "《论语》中'______，必有我师焉'", answer: "三人行" },
-                    2: { direction: "vertical", length: 2, text: "《论语》中'温故而知______'", answer: "新" },
-                    3: { direction: "horizontal", length: 3, text: "《论语》中'学而不思则______'", answer: "罔" }
+                    1: { direction: "horizontal", length: 5, text: "读书破万卷", answer: "读书破万卷" },
+                    2: { direction: "vertical", length: 9, text: "下笔有如神", answer: "下笔有如神" },
+                    3: { direction: "vertical", length: 5, text: "书籍是人类进步的阶梯", answer: "书籍是人类进步的阶梯" },
+                    4: { direction: "horizontal", length: 4, text: "理想的书籍是智慧的钥匙", answer: "理想的书籍是智慧的钥匙" }
                 }
             },
-            // 第二组题目
+            
+            // 题目2：红色经典
             {
                 id: 2,
-                title: "唐诗宋词",
-                size: 5,
+                title: "红色经典",
+                size: 7,
                 grid: [
-                    [0, 1, 0, 0, 0],
-                    [2, 1, 0, 0, 0],
-                    [2, 1, 3, 0, 0],
-                    [0, 0, 3, 0, 0],
-                    [0, 0, 3, 0, 0]
+                    [1, 0, 0, 0, 2, 2, 2],
+                    [1, 0, 0, 0, 0, 0, 0],
+                    [1, 3, 3, 0, 0, 0, 0],
+                    [1, 0, 0, 4, 4, 0, 0],
+                    [1, 0, 0, 0, 0, 5, 5],
+                    [1, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 0, 0, 0, 0, 0]
                 ],
                 clues: {
-                    1: { direction: "vertical", length: 3, text: "李白诗句'床前明月光，疑是地______霜'", answer: "上" },
-                    2: { direction: "vertical", length: 2, text: "孟浩然诗句'春______不觉晓'", answer: "眠" },
-                    3: { direction: "vertical", length: 3, text: "王安石诗句'春风又______江南岸'", answer: "绿" }
+                    1: { direction: "vertical", length: 7, text: "红旗", answer: "红旗" },
+                    2: { direction: "horizontal", length: 3, text: "中国", answer: "中国" },
+                    3: { direction: "horizontal", length: 2, text: "少年", answer: "少年" },
+                    4: { direction: "horizontal", length: 2, text: "党", answer: "党" },
+                    5: { direction: "horizontal", length: 2, text: "长征", answer: "长征" }
                 }
-            }
-          ];
-
-        // DOM元素
-        const pages = {
-            login: document.getElementById('loginPage'),
-            main: document.getElementById('mainPage'),
-            game: document.getElementById('gamePage'),
-            result: document.getElementById('resultPage'),
-            stats: document.getElementById('statsPage'),
-            ranking: document.getElementById('rankingPage')
-        };
-
-        // 工具函数：切换页面
-        function showPage(pageId) {
-            Object.keys(pages).forEach(key => {
-                if (key === pageId) {
-                    pages[key].classList.remove('hidden-page');
-                } else {
-                    pages[key].classList.add('hidden-page');
+            },
+            
+            // 题目3：古代典籍
+            {
+                id: 3,
+                title: "古代典籍",
+                size: 6,
+                grid: [
+                    [1, 1, 1, 0, 0, 0],
+                    [0, 2, 0, 0, 0, 0],
+                    [0, 2, 3, 3, 3, 3],
+                    [0, 2, 0, 0, 0, 4],
+                    [0, 2, 0, 0, 0, 4],
+                    [0, 2, 0, 0, 0, 4]
+                ],
+                clues: {
+                    1: { direction: "horizontal", length: 3, text: "论语", answer: "论语" },
+                    2: { direction: "vertical", length: 5, text: "孟子", answer: "孟子" },
+                    3: { direction: "horizontal", length: 4, text: "道德经", answer: "道德经" },
+                    4: { direction: "vertical", length: 3, text: "史记", answer: "史记" }
                 }
-            });
-        }
-
-        // 工具函数：格式化时间（秒 -> 分:秒）
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // 工具函数：格式化长时间（秒 -> 时:分:秒）
-        function formatLongTime(seconds) {
-            if (seconds < 60) {
-                return `${seconds}秒`;
-            } else if (seconds < 3600) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}分${secs}秒`;
-            } else {
-                const hours = Math.floor(seconds / 3600);
-                const mins = Math.floor((seconds % 3600) / 60);
-                return `${hours}时${mins}分`;
-            }
-        }
-
-        // 保存当前游戏进度
-        function saveCurrentGameProgress() {
-            if (gameData.currentGame.puzzle) {
-                const progress = {
-                    puzzleId: gameData.currentGame.puzzle.id,
-                    answers: gameData.currentGame.answers,
-                    elapsedSeconds: gameData.currentGame.elapsedSeconds,
-                    lastSaved: new Date().toISOString()
-                };
-                localStorage.setItem(`bookCrosswordProgress_${gameData.user.name}`, JSON.stringify(progress));
-            }
-        }
-
-        // 加载保存的游戏进度
-        function loadSavedGameProgress() {
-            if (!gameData.user) return null;
+            },
             
-            const savedProgress = localStorage.getItem(`bookCrosswordProgress_${gameData.user.name}`);
-            if (savedProgress) {
-                const progress = JSON.parse(savedProgress);
-                // 找到对应的谜题
-                const puzzle = questionBank.find(q => q.id === progress.puzzleId);
-                if (puzzle) {
-                    return {
-                        puzzle,
-                        answers: progress.answers,
-                        elapsedSeconds: progress.elapsedSeconds
-                    };
+            // 题目4：诗词名句
+            {
+                id: 4,
+                title: "诗词名句",
+                size: 8,
+                grid: [
+                    [1, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 2, 2, 2, 2, 0, 0],
+                    [1, 0, 0, 0, 0, 0, 3, 0],
+                    [1, 0, 0, 4, 0, 0, 3, 0],
+                    [1, 0, 0, 4, 0, 0, 3, 0],
+                    [1, 0, 0, 4, 0, 0, 3, 0],
+                    [1, 0, 0, 4, 0, 0, 3, 0],
+                    [1, 0, 0, 0, 0, 0, 3, 0]
+                ],
+                clues: {
+                    1: { direction: "vertical", length: 8, text: "床前明月光", answer: "床前明月光" },
+                    2: { direction: "horizontal", length: 4, text: "白日依山尽", answer: "白日依山尽" },
+                    3: { direction: "vertical", length: 6, text: "黄河入海流", answer: "黄河入海流" },
+                    4: { direction: "vertical", length: 4, text: "春眠不觉晓", answer: "春眠不觉晓" }
                 }
-            }
-            return null;
-        }
-
-        // 清除保存的游戏进度
-        function clearSavedGameProgress() {
-            if (gameData.user) {
-                localStorage.removeItem(`bookCrosswordProgress_${gameData.user.name}`);
-            }
-        }
-
-        // 获取所有玩家数据（从GitHub JSON文件）
-        async function fetchAllPlayers() {
-            try {
-                // 尝试从GitHub获取最新的玩家数据
-                const url = `https://${GITHUB_CONFIG.username}.github.io/${GITHUB_CONFIG.repo}/players.json`;
-                const response = await fetch(url);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    gameData.allPlayers = data;
-                    return true;
-                } else if (response.status === 404) {
-                    // 如果文件不存在，初始化一个空数组
-                    gameData.allPlayers = [];
-                    return true;
-                }
-            } catch (error) {
-                console.error("获取玩家数据失败，使用本地缓存:", error);
-            }
-            
-            // 失败时使用本地缓存
-            const localPlayers = localStorage.getItem('bookCrosswordCloudPlayers');
-            if (localPlayers) {
-                gameData.allPlayers = JSON.parse(localPlayers);
-                return true;
-            }
-            
-            // 最终 fallback
-            gameData.allPlayers = [
-                { name: "玩家一", bestTime: 120, totalAccuracy: 90 },
-                { name: "玩家二", bestTime: 150, totalAccuracy: 85 },
-                { name: "玩家三", bestTime: 180, totalAccuracy: 80 }
-            ];
-            return false;
-        }
-
-        // 保存玩家数据到GitHub（通过GitHub API）
-        async function savePlayerToCloud(playerData) {
-            try {
-                // 1. 先获取当前所有玩家数据
-                await fetchAllPlayers();
-                
-                // 2. 更新当前玩家数据
-                const playerIndex = gameData.allPlayers.findIndex(p => p.name === playerData.name);
-                if (playerIndex !== -1) {
-                    // 更新已有玩家
-                    gameData.allPlayers[playerIndex] = {
-                        ...gameData.allPlayers[playerIndex],
-                        ...playerData,
-                        lastUpdate: new Date().toISOString()
-                    };
-                } else {
-                    // 添加新玩家
-                    gameData.allPlayers.push({
-                        ...playerData,
-                        lastUpdate: new Date().toISOString()
-                    });
-                }
-                
-                // 3. 保存到本地缓存（防止提交失败）
-                localStorage.setItem('bookCrosswordCloudPlayers', JSON.stringify(gameData.allPlayers));
-                
-                // 4. 提交到GitHub（需要GitHub个人访问令牌）
-                const token = prompt("为了保存成绩到排行榜，请输入你的GitHub个人访问令牌（不会存储）：\n获取教程：https://docs.github.com/zh/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token");
-                if (!token) return false;
-                
-                // 构建提交数据
-                const content = btoa(JSON.stringify(gameData.allPlayers, null, 2));
-                const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/contents/players.json`;
-                
-                // 先检查文件是否存在
-                const checkResponse = await fetch(apiUrl);
-                let sha = null;
-                if (checkResponse.ok) {
-                    const fileData = await checkResponse.json();
-                    sha = fileData.sha; // 已有文件的SHA，用于更新
-                }
-                
-                // 提交更新
-                const response = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Update player ${playerData.name} stats`,
-                        content: content,
-                        sha: sha,
-                        branch: GITHUB_CONFIG.branch
-                    })
-                });
-                
-                if (response.ok) {
-                    alert("成绩已成功同步到排行榜！");
-                    return true;
-                } else {
-                    const error = await response.json();
-                    console.error("提交失败:", error);
-                    alert(`同步失败: ${error.message || '请检查令牌权限'}`);
-                    return false;
-                }
-            } catch (error) {
-                console.error("保存玩家数据失败:", error);
-                alert("同步失败，请稍后重试");
-                return false;
-            }
-        }
-
-        // 初始化：从本地存储加载数据
-        async function init() {
-            // 加载用户数据
-            const savedUser = localStorage.getItem('bookCrosswordUser');
-            const savedStats = localStorage.getItem('bookCrosswordStats');
-            
-            if (savedUser) {
-                gameData.user = JSON.parse(savedUser);
-            }
-            
-            if (savedStats) {
-                gameData.statistics = JSON.parse(savedStats);
-            }
-            
-            // 从云端加载所有玩家数据
-            await fetchAllPlayers();
-            
-            // 如果已有用户，直接进入主页面（自动登录）
-            if (gameData.user) {
-                updateMainPage();
-                showPage('main');
-            }
-            
-            // 绑定事件监听器
-            bindEvents();
-        }
-
-        // 保存数据到本地存储
-        function saveUserData() {
-            localStorage.setItem('bookCrosswordUser', JSON.stringify(gameData.user));
-        }
-
-        function saveStatsData() {
-            localStorage.setItem('bookCrosswordStats', JSON.stringify(gameData.statistics));
-        }
-
-        // 绑定所有事件监听器
-        function bindEvents() {
-            // 登录按钮
-            document.getElementById('loginBtn').addEventListener('click', () => {
-                const username = document.getElementById('username').value.trim();
-                if (username) {
-                    gameData.user = { name: username };
-                    saveUserData();
-                    
-                    // 检查是否是新用户
-                    const existingPlayer = gameData.allPlayers.find(p => p.name === username);
-                    if (!existingPlayer) {
-                        // 先添加到本地列表
-                        gameData.allPlayers.push({
-                            name: username,
-                            bestTime: Infinity,
-                            totalAccuracy: 0
-                        });
-                    }
-                    
-                    updateMainPage();
-                    showPage('main');
-                } else {
-                    alert('请输入用户名');
-                }
-            });
-            
-            // 开始游戏按钮
-            document.getElementById('startGameBtn').addEventListener('click', startNewGame);
-            
-            // 继续游戏按钮
-            document.getElementById('continueGameBtn').addEventListener('click', continueSavedGame);
-            
-            // 返回主页面按钮
-            document.getElementById('backToMainBtn').addEventListener('click', () => {
-                if (gameData.currentGame.timer) {
-                    clearInterval(gameData.currentGame.timer);
-                    // 返回主页面时保存当前进度
-                    saveCurrentGameProgress();
-                }
-                showPage('main');
-            });
-            
-            // 提交答案按钮
-            document.getElementById('submitBtn').addEventListener('click', submitAnswers);
-            
-            // 再玩一次按钮
-            document.getElementById('playAgainBtn').addEventListener('click', startNewGame);
-            
-            // 从结果页返回主页
-            document.getElementById('backToMainFromResultBtn').addEventListener('click', () => {
-                showPage('main');
-            });
-            
-            // 统计页面按钮
-            document.getElementById('statsBtn').addEventListener('click', () => {
-                updateStatsPage();
-                showPage('stats');
-            });
-            
-            // 从统计页返回
-            document.getElementById('backFromStatsBtn').addEventListener('click', () => {
-                showPage('main');
-            });
-            
-            // 排行榜按钮
-            document.getElementById('rankingBtn').addEventListener('click', async () => {
-                await fetchAllPlayers(); // 打开时刷新数据
-                updateRankingPage('time');
-                showPage('ranking');
-            });
-            
-            // 刷新排行榜按钮
-            document.getElementById('refreshRankingBtn').addEventListener('click', async () => {
-                await fetchAllPlayers();
-                updateRankingPage(document.getElementById('rankByTimeBtn').classList.contains('text-primary') ? 'time' : 'accuracy');
-            });
-            
-            // 从排行榜返回
-            document.getElementById('backFromRankingBtn').addEventListener('click', () => {
-                showPage('main');
-            });
-            
-            // 排行榜排序按钮
-            document.getElementById('rankByTimeBtn').addEventListener('click', () => {
-                document.getElementById('rankByTimeBtn').classList.add('text-primary', 'border-primary');
-                document.getElementById('rankByTimeBtn').classList.remove('text-gray-500');
-                document.getElementById('rankByAccuracyBtn').classList.remove('text-primary', 'border-primary');
-                document.getElementById('rankByAccuracyBtn').classList.add('text-gray-500');
-                updateRankingPage('time');
-            });
-            
-            document.getElementById('rankByAccuracyBtn').addEventListener('click', () => {
-                document.getElementById('rankByAccuracyBtn').classList.add('text-primary', 'border-primary');
-                document.getElementById('rankByAccuracyBtn').classList.remove('text-gray-500');
-                document.getElementById('rankByTimeBtn').classList.remove('text-primary', 'border-primary');
-                document.getElementById('rankByTimeBtn').classList.add('text-gray-500');
-                updateRankingPage('accuracy');
-            });
-            
-            // 页面关闭前保存游戏进度
-            window.addEventListener('beforeunload', () => {
-                if (gameData.currentGame.timer && gameData.user) {
-                    clearInterval(gameData.currentGame.timer);
-                    // 计算当前已用时间
-                    const currentTime = new Date().getTime();
-                    gameData.currentGame.elapsedSeconds += Math.floor((currentTime - gameData.currentGame.startTime) / 1000);
-                    saveCurrentGameProgress();
-                }
-            });
-        }
-
-        // 更新主页面数据
-        function updateMainPage() {
-            document.getElementById('welcomeUsername').textContent = gameData.user.name;
-            document.getElementById('totalGames').textContent = gameData.statistics.totalGames;
-            
-            const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
-            const accuracy = totalAnswers > 0 ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) : 0;
-            document.getElementById('totalAccuracy').textContent = `${accuracy}%`;
-            
-            document.getElementById('bestRank').textContent = gameData.statistics.bestRank || '--';
-            document.getElementById('totalTime').textContent = formatLongTime(gameData.statistics.totalTime);
-            
-            // 检查是否有未完成的游戏，显示继续按钮
-            const savedProgress = loadSavedGameProgress();
-            const continueBtn = document.getElementById('continueGameBtn');
-            if (savedProgress) {
-                continueBtn.classList.remove('hidden');
-            } else {
-                continueBtn.classList.add('hidden');
-            }
-        }
-
-        // 开始新游戏
-        function startNewGame() {
-            // 清除可能存在的旧进度
-            clearSavedGameProgress();
-            
-            // 随机选择一个谜题
-            const randomIndex = Math.floor(Math.random() * questionBank.length);
-            gameData.currentGame.puzzle = questionBank[randomIndex];
-            
-            // 初始化答案存储
-            gameData.currentGame.answers = {};
-            Object.keys(gameData.currentGame.puzzle.clues).forEach(key => {
-                gameData.currentGame.answers[key] = Array(gameData.currentGame.puzzle.clues[key].length).fill('');
-            });
-            
-            // 重置计时
-            gameData.currentGame.elapsedSeconds = 0;
-            
-            // 生成填字网格
-            generateCrosswordGrid();
-            
-            // 生成线索列表
-            generateCluesList();
-            
-            // 开始计时
-            startGameTimer();
-            
-            // 显示游戏页面
-            showPage('game');
-        }
-        
-        // 继续保存的游戏
-        function continueSavedGame() {
-            const savedProgress = loadSavedGameProgress();
-            if (savedProgress) {
-                gameData.currentGame.puzzle = savedProgress.puzzle;
-                gameData.currentGame.answers = savedProgress.answers;
-                gameData.currentGame.elapsedSeconds = savedProgress.elapsedSeconds;
-                
-                // 生成填字网格
-                generateCrosswordGrid();
-                
-                // 填充已输入的答案
-                fillSavedAnswers();
-                
-                // 生成线索列表
-                generateCluesList();
-                
-                // 开始计时
-                startGameTimer();
-                
-                // 显示游戏页面
-                showPage('game');
-            }
-        }
-        
-        // 填充已保存的答案
-        function fillSavedAnswers() {
-            Object.entries(gameData.currentGame.answers).forEach(([number, letters]) => {
-                const clue = gameData.currentGame.puzzle.clues[number];
-                let startRow, startCol;
-                
-                // 找到起始位置
-                outerLoop:
-                for (let r = 0; r < gameData.currentGame.puzzle.size; r++) {
-                    for (let c = 0; c < gameData.currentGame.puzzle.size; c++) {
-                        if (gameData.currentGame.puzzle.grid[r][c] == number) {
-                            startRow = r;
-                            startCol = c;
-                            break outerLoop;
-                        }
-                    }
-                }
-                
-                // 填充每个字符
-                for (let i = 0; i < letters.length; i++) {
-                    if (letters[i]) {
-                        let cellRow, cellCol;
-                        if (clue.direction === 'horizontal') {
-                            cellRow = startRow;
-                            cellCol = startCol + i;
-                        } else {
-                            cellRow = startRow + i;
-                            cellCol = startCol;
-                        }
-                        
-                        const input = document.querySelector(`input[data-row="${cellRow}"][data-col="${cellCol}"]`);
-                        if (input) {
-                            input.value = letters[i];
-                        }
-                    }
-                }
-            });
-        }
-
-        // 生成填字网格
-        function generateCrosswordGrid() {
-            const gridContainer = document.getElementById('crosswordGrid');
-            gridContainer.innerHTML = '';
-            
-            const table = document.createElement('table');
-            const tbody = document.createElement('tbody');
-            
-            const { size, grid } = gameData.currentGame.puzzle;
-            
-            for (let row = 0; row < size; row++) {
-                const tr = document.createElement('tr');
-                
-                for (let col = 0; col < size; col++) {
-                    const cellValue = grid[row][col];
-                    const td = document.createElement('td');
-                    
-                    if (cellValue === 0) {
-                        // 空白单元格（不可填）
-                        td.className = 'w-12 h-12 md:w-14 md:h-14 bg-gray-200';
-                    } else {
-                        // 可填单元格
-                        td.className = 'cell relative';
-                        td.dataset.row = row;
-                        td.dataset.col = col;
-                        td.dataset.number = cellValue;
-                        
-                        // 如果是起始单元格，添加数字标记
-                        if (gameData.currentGame.puzzle.clues[cellValue]) {
-                            const numberSpan = document.createElement('span');
-                            numberSpan.className = 'absolute top-1 left-1 text-xs text-gray-500';
-                            numberSpan.textContent = cellValue;
-                            td.appendChild(numberSpan);
-                        }
-                        
-                        // 创建输入框
-                        const input = document.createElement('input');
-                        input.type = 'text';
-                        input.maxLength = 1;
-                        input.className = 'w-8 h-8 text-center focus:outline-none';
-                        input.dataset.row = row;
-                        input.dataset.col = col;
-                        input.dataset.number = cellValue;
-                        td.appendChild(input);
-                        
-                        // 输入事件
-                        input.addEventListener('input', (e) => {
-                            // 只允许中文和字母
-                            e.target.value = e.target.value.replace(/[^a-zA-Z\u4e00-\u9fa5]/g, '');
-                            handleInput(e, row, col);
-                            // 输入时保存进度
-                            saveCurrentGameProgress();
-                        });
-                        
-                        // 按键事件（处理导航）
-                        input.addEventListener('keydown', (e) => {
-                            if (e.key === 'ArrowRight') {
-                                e.preventDefault();
-                                moveToNextCell(row, col, 'right');
-                            } else if (e.key === 'ArrowLeft') {
-                                e.preventDefault();
-                                moveToNextCell(row, col, 'left');
-                            } else if (e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                moveToNextCell(row, col, 'down');
-                            } else if (e.key === 'ArrowUp') {
-                                e.preventDefault();
-                                moveToNextCell(row, col, 'up');
-                            }
-                        });
-                    }
-                    
-                    tr.appendChild(td);
-                }
-                
-                tbody.appendChild(tr);
-            }
-            
-            table.appendChild(tbody);
-            gridContainer.appendChild(table);
-        }
-
-        // 生成线索列表
-        function generateCluesList() {
-            const cluesContainer = document.getElementById('cluesList');
-            cluesContainer.innerHTML = '';
-            
-            // 按数字排序线索
-            const sortedClues = Object.entries(gameData.currentGame.puzzle.clues)
-                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-            
-            sortedClues.forEach(([number, clue]) => {
-                const clueElement = document.createElement('div');
-                clueElement.className = 'flex items-start p-2 border-b border-gray-100';
-                
-                const numberSpan = document.createElement('span');
-                numberSpan.className = 'font-bold text-primary mr-2 min-w-[24px]';
-                numberSpan.textContent = `${number}.`;
-                
-                const directionSpan = document.createElement('span');
-                directionSpan.className = 'text-xs bg-gray-100 px-1 rounded mr-2';
-                directionSpan.textContent = clue.direction === 'horizontal' ? '横' : '竖';
-                
-                const textSpan = document.createElement('span');
-                textSpan.textContent = clue.text;
-                
-                clueElement.appendChild(numberSpan);
-                clueElement.appendChild(directionSpan);
-                clueElement.appendChild(textSpan);
-                
-                // 点击线索高亮对应单元格
-                clueElement.addEventListener('click', () => {
-                    highlightClueCells(number);
-                });
-                
-                cluesContainer.appendChild(clueElement);
-            });
-        }
-
-        // 高亮线索对应的单元格
-        function highlightClueCells(number) {
-            // 移除所有高亮
-            document.querySelectorAll('.cell').forEach(cell => {
-                cell.classList.remove('bg-primary/10');
-            });
-            
-            const clue = gameData.currentGame.puzzle.clues[number];
-            let startRow, startCol;
-            
-            // 找到起始位置
-            outerLoop:
-            for (let row = 0; row < gameData.currentGame.puzzle.size; row++) {
-                for (let col = 0; col < gameData.currentGame.puzzle.size; col++) {
-                    if (gameData.currentGame.puzzle.grid[row][col] == number) {
-                        startRow = row;
-                        startCol = col;
-                        break outerLoop;
-                    }
-                }
-            }
-            
-            // 高亮对应单元格
-            if (clue.direction === 'horizontal') {
-                for (let i = 0; i < clue.length; i++) {
-                    const cell = document.querySelector(`.cell[data-row="${startRow}"][data-col="${startCol + i}"]`);
-                    if (cell) cell.classList.add('bg-primary/10');
-                }
-            } else {
-                for (let i = 0; i < clue.length; i++) {
-                    const cell = document.querySelector(`.cell[data-row="${startRow + i}"][data-col="${startCol}"]`);
-                    if (cell) cell.classList.add('bg-primary/10');
-                }
-            }
-            
-            // 聚焦到第一个单元格
-            const firstInput = document.querySelector(`input[data-row="${startRow}"][data-col="${startCol}"]`);
-            if (firstInput) firstInput.focus();
-        }
-
-        // 处理输入
-        function handleInput(e, row, col) {
-            const value = e.target.value;
-            const number = e.target.dataset.number;
-            
-            // 找到这个单元格在词语中的位置
-            let startRow, startCol;
-            outerLoop:
-            for (let r = 0; r < gameData.currentGame.puzzle.size; r++) {
-                for (let c = 0; c < gameData.currentGame.puzzle.size; c++) {
-                    if (gameData.currentGame.puzzle.grid[r][c] == number) {
-                        startRow = r;
-                        startCol = c;
-                        break outerLoop;
-                    }
-                }
-            }
-            
-            const clue = gameData.currentGame.puzzle.clues[number];
-            let index;
-            
-            if (clue.direction === 'horizontal') {
-                index = col - startCol;
-            } else {
-                index = row - startRow;
-            }
-            
-            // 保存答案
-            if (index >= 0 && index < clue.length) {
-                gameData.currentGame.answers[number][index] = value;
-            }
-            
-            // 自动移动到下一个单元格
-            if (value) {
-                if (clue.direction === 'horizontal') {
-                    moveToNextCell(row, col, 'right');
-                } else {
-                    moveToNextCell(row, col, 'down');
-                }
-            }
-        }
-
-        // 移动到下一个单元格
-        function moveToNextCell(row, col, direction) {
-            let nextRow = row;
-            let nextCol = col;
-            
-            switch (direction) {
-                case 'right':
-                    nextCol++;
-                    break;
-                case 'left':
-                    nextCol--;
-                    break;
-                case 'down':
-                    nextRow++;
-                    break;
-                case 'up':
-                    nextRow--;
-                    break;
-            }
-            
-            // 检查下一个单元格是否存在且可填
-            const nextCell = document.querySelector(`.cell[data-row="${nextRow}"][data-col="${nextCol}"]`);
-            if (nextCell) {
-                const input = nextCell.querySelector('input');
-                if (input) input.focus();
-            }
-        }
-
-        // 开始游戏计时器
-        function startGameTimer() {
-            gameData.currentGame.startTime = new Date().getTime();
-            
-            if (gameData.currentGame.timer) {
-                clearInterval(gameData.currentGame.timer);
-            }
-            
-            const timerElement = document.getElementById('gameTimer');
-            // 显示已用时间
-            timerElement.textContent = formatTime(gameData.currentGame.elapsedSeconds);
-            
-            gameData.currentGame.timer = setInterval(() => {
-                const currentTime = new Date().getTime();
-                const currentElapsed = gameData.currentGame.elapsedSeconds + 
-                    Math.floor((currentTime - gameData.currentGame.startTime) / 1000);
-                timerElement.textContent = formatTime(currentElapsed);
-            }, 1000);
-        }
-
-        // 提交答案
-        async function submitAnswers() {
-            // 停止计时器
-            clearInterval(gameData.currentGame.timer);
-            const endTime = new Date().getTime();
-            const totalElapsedSeconds = gameData.currentGame.elapsedSeconds + 
-                Math.floor((endTime - gameData.currentGame.startTime) / 1000);
-            
-            // 清除保存的进度
-            clearSavedGameProgress();
-            
-            // 检查答案
-            let correctCount = 0;
-            let totalCount = 0;
-            
-            Object.entries(gameData.currentGame.puzzle.clues).forEach(([number, clue]) => {
-                const userAnswer = gameData.currentGame.answers[number].join('');
-                totalCount += clue.length;
-                
-                // 检查每个字符
-                for (let i = 0; i < clue.length; i++) {
-                    const isCorrect = gameData.currentGame.answers[number][i] === clue.answer[i];
-                    correctCount += isCorrect ? 1 : 0;
-                    
-                    // 标记单元格
-                    markCellAsCorrectOrIncorrect(number, i, isCorrect);
-                }
-            });
-            
-            const incorrectCount = totalCount - correctCount;
-            
-            // 更新统计数据
-            gameData.statistics.totalGames++;
-            gameData.statistics.totalCorrect += correctCount;
-            gameData.statistics.totalIncorrect += incorrectCount;
-            gameData.statistics.totalTime += totalElapsedSeconds;
-            
-            // 保存最近游戏记录
-            gameData.statistics.recentGames.unshift({
-                time: totalElapsedSeconds,
-                correct: correctCount,
-                incorrect: incorrectCount,
-                date: new Date().toISOString()
-            });
-            
-            // 只保留最近5条记录
-            if (gameData.statistics.recentGames.length > 5) {
-                gameData.statistics.recentGames = gameData.statistics.recentGames.slice(0, 5);
-            }
-            
-            saveStatsData();
-            
-            // 准备同步到云端的玩家数据
-            const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
-            const playerData = {
-                name: gameData.user.name,
-                bestTime: Math.min(gameData.allPlayers.find(p => p.name === gameData.user.name)?.bestTime || Infinity, totalElapsedSeconds),
-                totalAccuracy: totalAnswers > 0 ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) : 0
-            };
-            
-            // 同步到云端（排行榜）
-            await savePlayerToCloud(playerData);
-            
-            // 重新获取最新的玩家数据
-            await fetchAllPlayers();
-            
-            // 计算排名
-            const rank = calculateRank(totalElapsedSeconds, correctCount, totalCount);
-            gameData.statistics.bestRank = gameData.statistics.bestRank 
-                ? Math.min(gameData.statistics.bestRank, rank) 
-                : rank;
-            saveStatsData();
-            
-            // 更新结果页面
-            document.getElementById('resultTime').textContent = formatTime(totalElapsedSeconds);
-            document.getElementById('resultCorrect').textContent = correctCount;
-            document.getElementById('resultIncorrect').textContent = incorrectCount;
-            document.getElementById('resultRank').textContent = rank;
-            
-            // 延迟显示结果页面，让用户看到标记的答案
-            setTimeout(() => {
-                showPage('result');
-            }, 1000);
-        }
-
-        // 标记单元格为正确或错误
-        function markCellAsCorrectOrIncorrect(number, index, isCorrect) {
-            const clue = gameData.currentGame.puzzle.clues[number];
-            let startRow, startCol;
-            
-            // 找到起始位置
-            outerLoop:
-            for (let r = 0; r < gameData.currentGame.puzzle.size; r++) {
-                for (let c = 0; c < gameData.currentGame.puzzle.size; c++) {
-                    if (gameData.currentGame.puzzle.grid[r][c] == number) {
-                        startRow = r;
-                        startCol = c;
-                        break outerLoop;
-                    }
-                }
-            }
-            
-            let cellRow, cellCol;
-            if (clue.direction === 'horizontal') {
-                cellRow = startRow;
-                cellCol = startCol + index;
-            } else {
-                cellRow = startRow + index;
-                cellCol = startCol;
-            }
-            
-            const cell = document.querySelector(`.cell[data-row="${cellRow}"][data-col="${cellCol}"]`);
-            if (cell) {
-                cell.classList.remove('cell-correct', 'cell-error');
-                cell.classList.add(isCorrect ? 'cell-correct' : 'cell-error');
-            }
-        }
-
-        // 计算排名
-        function calculateRank(time, correct, total) {
-            const accuracy = total > 0 ? (correct / total) * 100 : 0;
-            let rank = 1;
-            
-            // 比较所有玩家
-            gameData.allPlayers.forEach(player => {
-                // 先比较正确率，再比较时间
-                if (player.name !== gameData.user.name) {
-                    if (player.totalAccuracy > accuracy) {
-                        rank++;
-                    } else if (player.totalAccuracy === accuracy && player.bestTime < time) {
-                        rank++;
-                    }
-                }
-            });
-            
-            return rank;
-        }
-
-        // 更新统计页面
-        function updateStatsPage() {
-            const totalAnswers = gameData.statistics.totalCorrect + gameData.statistics.totalIncorrect;
-            const accuracy = totalAnswers > 0 ? Math.round((gameData.statistics.totalCorrect / totalAnswers) * 100) : 0;
-            
-            document.getElementById('statsTotalGames').textContent = gameData.statistics.totalGames;
-            document.getElementById('statsTotalCorrect').textContent = gameData.statistics.totalCorrect;
-            document.getElementById('statsTotalIncorrect').textContent = gameData.statistics.totalIncorrect;
-            document.getElementById('statsTotalTime').textContent = formatLongTime(gameData.statistics.totalTime);
-            
-            // 绘制正确率图表
-            const ctx = document.getElementById('accuracyChart').getContext('2d');
-            if (window.accuracyChartInstance) {
-                window.accuracyChartInstance.destroy();
-            }
-            
-            window.accuracyChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['正确', '错误'],
-                    datasets: [{
-                        data: [gameData.statistics.totalCorrect, gameData.statistics.totalIncorrect],
-                        backgroundColor: ['#10B981', '#EF4444'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const percentage = totalAnswers > 0 ? Math.round((value / totalAnswers) * 100) : 0;
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
-            
-            // 更新最近游戏记录
-            const recentGamesContainer = document.getElementById('recentGames');
-            recentGamesContainer.innerHTML = '';
-            
-            if (gameData.statistics.recentGames.length === 0) {
-                recentGamesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">暂无游戏记录</p>';
-                return;
-            }
-            
-            gameData.statistics.recentGames.forEach(game => {
-                const gameElement = document.createElement('div');
-                gameElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
-                
-                const date = new Date(game.date);
-                const dateStr = `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-                
-                gameElement.innerHTML = `
-                    <div>
-                        <p class="font-medium">${dateStr}</p>
-                        <p class="text-sm text-gray-500">用时: ${formatTime(game.time)}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-secondary font-medium">正确: ${game.correct}</p>
-                        <p class="text-red-500 text-sm">错误: ${game.incorrect}</p>
-                    </div>
-                `;
-                
-                recentGamesContainer.appendChild(gameElement);
-            });
-        }
-
-        // 更新排行榜页面
-        function updateRankingPage(type) {
-            const rankingContainer = document.getElementById('rankingList');
-            rankingContainer.innerHTML = '';
-            
-            // 复制并排序玩家数据
-            let sortedPlayers = [...gameData.allPlayers];
-            
-            if (type === 'time') {
-                // 按最佳时间排序（升序）
-                sortedPlayers.sort((a, b) => a.bestTime - b.bestTime);
-            } else {
-                // 按正确率排序（降序）
-                sortedPlayers.sort((a, b) => b.totalAccuracy - a.totalAccuracy);
-            }
-            
-            // 显示排名
-            sortedPlayers.forEach((player, index) => {
-                const rankElement = document.createElement('div');
-                rankElement.className = `flex items-center p-3 rounded-lg ${player.name === gameData.user.name ? 'bg-primary/10' : 'hover:bg-gray-50'}`;
-                
-                // 排名样式
-                let rankClass = '';
-                if (index === 0) rankClass = 'bg-yellow-100 text-yellow-600';
-                else if (index === 1) rankClass = 'bg-gray-200 text-gray-600';
-                else if (index === 2) rankClass = 'bg-orange-100 text-orange-600';
-                else rankClass = 'bg-gray-100 text-gray-600';
-                
-                // 显示内容
-                let statsContent = '';
-                if (type === 'time') {
-                    statsContent = `
-                        <div class="text-right">
-                            <p class="font-medium">最佳时间: ${player.bestTime !== Infinity ? formatTime(player.bestTime) : '--'}</p>
-                            <p class="text-sm text-gray-500">正确率: ${player.totalAccuracy}%</p>
-                        </div>
-                    `;
-                } else {
-                    statsContent = `
-                        <div class="text-right">
-                            <p class="font-medium">正确率: ${player.totalAccuracy}%</p>
-                            <p class="text-sm text-gray-500">最佳时间: ${player.bestTime !== Infinity ? formatTime(player.bestTime) : '--'}</p>
-                        </div>
-                    `;
-                }
-                
-                rankElement.innerHTML = `
-                    <div class="w-8 h-8 rounded-full ${rankClass} flex items-center justify-center font-bold mr-3">
-                        ${index + 1}
-                    </div>
-                    <div class="flex-grow">
-                        <p class="font-medium ${player.name === gameData.user.name ? 'text-primary' : ''}">${player.name}</p>
-                    </div>
-                    ${statsContent}
-                `;
-                
-                rankingContainer.appendChild(rankElement);
-            });
-        }
-
-        // 初始化游戏
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
+            },
+            
+            // 题目5：成语填空
+            {
+                id: 5,
+                title: "成语填空",
+                size: 6,
+                grid: [
+                    [1, 1, 0, 2, 2, 2],
