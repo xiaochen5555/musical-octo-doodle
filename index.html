@@ -112,6 +112,11 @@
                 </div>
             </div>
             
+            <!-- 新增：继续游戏按钮（如果有未完成的游戏） -->
+            <button id="continueGameBtn" class="btn-primary w-full mb-3 hidden">
+                <i class="fa fa-play mr-1"></i> 继续未完成的游戏
+            </button>
+            
             <button id="startGameBtn" class="btn-primary w-full mb-3">
                 <i class="fa fa-play mr-1"></i> 开始新游戏
             </button>
@@ -286,6 +291,7 @@
                 puzzle: null,
                 answers: {},
                 startTime: 0,
+                elapsedSeconds: 0, // 新增：记录已用时
                 timer: null
             },
             allPlayers: [] // 存储所有玩家数据用于排行榜
@@ -410,6 +416,46 @@
             }
         }
 
+        // 保存当前游戏进度
+        function saveCurrentGameProgress() {
+            if (gameData.currentGame.puzzle) {
+                const progress = {
+                    puzzleId: gameData.currentGame.puzzle.id,
+                    answers: gameData.currentGame.answers,
+                    elapsedSeconds: gameData.currentGame.elapsedSeconds,
+                    lastSaved: new Date().toISOString()
+                };
+                localStorage.setItem(`bookCrosswordProgress_${gameData.user.name}`, JSON.stringify(progress));
+            }
+        }
+
+        // 加载保存的游戏进度
+        function loadSavedGameProgress() {
+            if (!gameData.user) return null;
+            
+            const savedProgress = localStorage.getItem(`bookCrosswordProgress_${gameData.user.name}`);
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                // 找到对应的谜题
+                const puzzle = questionBank.find(q => q.id === progress.puzzleId);
+                if (puzzle) {
+                    return {
+                        puzzle,
+                        answers: progress.answers,
+                        elapsedSeconds: progress.elapsedSeconds
+                    };
+                }
+            }
+            return null;
+        }
+
+        // 清除保存的游戏进度
+        function clearSavedGameProgress() {
+            if (gameData.user) {
+                localStorage.removeItem(`bookCrosswordProgress_${gameData.user.name}`);
+            }
+        }
+
         // 初始化：从本地存储加载数据
         function init() {
             // 加载用户数据
@@ -437,7 +483,7 @@
                 savePlayersData();
             }
             
-            // 如果已有用户，直接进入主页面
+            // 如果已有用户，直接进入主页面（自动登录）
             if (gameData.user) {
                 updateMainPage();
                 showPage('main');
@@ -490,10 +536,15 @@
             // 开始游戏按钮
             document.getElementById('startGameBtn').addEventListener('click', startNewGame);
             
+            // 继续游戏按钮（新增）
+            document.getElementById('continueGameBtn').addEventListener('click', continueSavedGame);
+            
             // 返回主页面按钮
             document.getElementById('backToMainBtn').addEventListener('click', () => {
                 if (gameData.currentGame.timer) {
                     clearInterval(gameData.currentGame.timer);
+                    // 返回主页面时保存当前进度
+                    saveCurrentGameProgress();
                 }
                 showPage('main');
             });
@@ -547,6 +598,17 @@
                 document.getElementById('rankByTimeBtn').classList.add('text-gray-500');
                 updateRankingPage('accuracy');
             });
+            
+            // 页面关闭前保存游戏进度（新增）
+            window.addEventListener('beforeunload', () => {
+                if (gameData.currentGame.timer && gameData.user) {
+                    clearInterval(gameData.currentGame.timer);
+                    // 计算当前已用时间
+                    const currentTime = new Date().getTime();
+                    gameData.currentGame.elapsedSeconds += Math.floor((currentTime - gameData.currentGame.startTime) / 1000);
+                    saveCurrentGameProgress();
+                }
+            });
         }
 
         // 更新主页面数据
@@ -560,10 +622,22 @@
             
             document.getElementById('bestRank').textContent = gameData.statistics.bestRank || '--';
             document.getElementById('totalTime').textContent = formatLongTime(gameData.statistics.totalTime);
+            
+            // 检查是否有未完成的游戏，显示继续按钮（新增）
+            const savedProgress = loadSavedGameProgress();
+            const continueBtn = document.getElementById('continueGameBtn');
+            if (savedProgress) {
+                continueBtn.classList.remove('hidden');
+            } else {
+                continueBtn.classList.add('hidden');
+            }
         }
 
         // 开始新游戏
         function startNewGame() {
+            // 清除可能存在的旧进度
+            clearSavedGameProgress();
+            
             // 随机选择一个谜题
             const randomIndex = Math.floor(Math.random() * questionBank.length);
             gameData.currentGame.puzzle = questionBank[randomIndex];
@@ -573,6 +647,9 @@
             Object.keys(gameData.currentGame.puzzle.clues).forEach(key => {
                 gameData.currentGame.answers[key] = Array(gameData.currentGame.puzzle.clues[key].length).fill('');
             });
+            
+            // 重置计时
+            gameData.currentGame.elapsedSeconds = 0;
             
             // 生成填字网格
             generateCrosswordGrid();
@@ -585,6 +662,70 @@
             
             // 显示游戏页面
             showPage('game');
+        }
+        
+        // 继续保存的游戏（新增）
+        function continueSavedGame() {
+            const savedProgress = loadSavedGameProgress();
+            if (savedProgress) {
+                gameData.currentGame.puzzle = savedProgress.puzzle;
+                gameData.currentGame.answers = savedProgress.answers;
+                gameData.currentGame.elapsedSeconds = savedProgress.elapsedSeconds;
+                
+                // 生成填字网格
+                generateCrosswordGrid();
+                
+                // 填充已输入的答案
+                fillSavedAnswers();
+                
+                // 生成线索列表
+                generateCluesList();
+                
+                // 开始计时
+                startGameTimer();
+                
+                // 显示游戏页面
+                showPage('game');
+            }
+        }
+        
+        // 填充已保存的答案（新增）
+        function fillSavedAnswers() {
+            Object.entries(gameData.currentGame.answers).forEach(([number, letters]) => {
+                const clue = gameData.currentGame.puzzle.clues[number];
+                let startRow, startCol;
+                
+                // 找到起始位置
+                outerLoop:
+                for (let r = 0; r < gameData.currentGame.puzzle.size; r++) {
+                    for (let c = 0; c < gameData.currentGame.puzzle.size; c++) {
+                        if (gameData.currentGame.puzzle.grid[r][c] == number) {
+                            startRow = r;
+                            startCol = c;
+                            break outerLoop;
+                        }
+                    }
+                }
+                
+                // 填充每个字符
+                for (let i = 0; i < letters.length; i++) {
+                    if (letters[i]) {
+                        let cellRow, cellCol;
+                        if (clue.direction === 'horizontal') {
+                            cellRow = startRow;
+                            cellCol = startCol + i;
+                        } else {
+                            cellRow = startRow + i;
+                            cellCol = startCol;
+                        }
+                        
+                        const input = document.querySelector(`input[data-row="${cellRow}"][data-col="${cellCol}"]`);
+                        if (input) {
+                            input.value = letters[i];
+                        }
+                    }
+                }
+            });
         }
 
         // 生成填字网格
@@ -637,6 +778,8 @@
                             // 只允许中文和字母
                             e.target.value = e.target.value.replace(/[^a-zA-Z\u4e00-\u9fa5]/g, '');
                             handleInput(e, row, col);
+                            // 输入时保存进度
+                            saveCurrentGameProgress();
                         });
                         
                         // 按键事件（处理导航）
@@ -823,11 +966,14 @@
             }
             
             const timerElement = document.getElementById('gameTimer');
+            // 显示已用时间
+            timerElement.textContent = formatTime(gameData.currentGame.elapsedSeconds);
             
             gameData.currentGame.timer = setInterval(() => {
                 const currentTime = new Date().getTime();
-                const elapsedSeconds = Math.floor((currentTime - gameData.currentGame.startTime) / 1000);
-                timerElement.textContent = formatTime(elapsedSeconds);
+                const currentElapsed = gameData.currentGame.elapsedSeconds + 
+                    Math.floor((currentTime - gameData.currentGame.startTime) / 1000);
+                timerElement.textContent = formatTime(currentElapsed);
             }, 1000);
         }
 
@@ -836,7 +982,11 @@
             // 停止计时器
             clearInterval(gameData.currentGame.timer);
             const endTime = new Date().getTime();
-            const elapsedSeconds = Math.floor((endTime - gameData.currentGame.startTime) / 1000);
+            const totalElapsedSeconds = gameData.currentGame.elapsedSeconds + 
+                Math.floor((endTime - gameData.currentGame.startTime) / 1000);
+            
+            // 清除保存的进度
+            clearSavedGameProgress();
             
             // 检查答案
             let correctCount = 0;
@@ -862,11 +1012,11 @@
             gameData.statistics.totalGames++;
             gameData.statistics.totalCorrect += correctCount;
             gameData.statistics.totalIncorrect += incorrectCount;
-            gameData.statistics.totalTime += elapsedSeconds;
+            gameData.statistics.totalTime += totalElapsedSeconds;
             
             // 保存最近游戏记录
             gameData.statistics.recentGames.unshift({
-                time: elapsedSeconds,
+                time: totalElapsedSeconds,
                 correct: correctCount,
                 incorrect: incorrectCount,
                 date: new Date().toISOString()
@@ -883,8 +1033,8 @@
             const playerIndex = gameData.allPlayers.findIndex(p => p.name === gameData.user.name);
             if (playerIndex !== -1) {
                 // 更新最佳时间
-                if (elapsedSeconds < gameData.allPlayers[playerIndex].bestTime) {
-                    gameData.allPlayers[playerIndex].bestTime = elapsedSeconds;
+                if (totalElapsedSeconds < gameData.allPlayers[playerIndex].bestTime) {
+                    gameData.allPlayers[playerIndex].bestTime = totalElapsedSeconds;
                 }
                 
                 // 更新总正确率
@@ -897,14 +1047,14 @@
             }
             
             // 计算排名
-            const rank = calculateRank(elapsedSeconds, correctCount, totalCount);
+            const rank = calculateRank(totalElapsedSeconds, correctCount, totalCount);
             gameData.statistics.bestRank = gameData.statistics.bestRank 
                 ? Math.min(gameData.statistics.bestRank, rank) 
                 : rank;
             saveStatsData();
             
             // 更新结果页面
-            document.getElementById('resultTime').textContent = formatTime(elapsedSeconds);
+            document.getElementById('resultTime').textContent = formatTime(totalElapsedSeconds);
             document.getElementById('resultCorrect').textContent = correctCount;
             document.getElementById('resultIncorrect').textContent = incorrectCount;
             document.getElementById('resultRank').textContent = rank;
